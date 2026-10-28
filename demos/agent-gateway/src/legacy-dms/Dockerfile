@@ -21,10 +21,10 @@ RUN groupadd -g 65532 nonroot && \
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock ./
+COPY --chown=65532:65532 pyproject.toml uv.lock ./
 RUN uv sync --frozen --no-dev
 
-COPY . .
+COPY --chown=65532:65532 . .
 
 USER 65532:65532
 

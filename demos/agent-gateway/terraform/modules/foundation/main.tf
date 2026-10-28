@@ -78,12 +78,20 @@ resource "google_project_iam_member" "aiplatform_dns_peer" {
   member  = "serviceAccount:${google_project_service_identity.aiplatform.email}"
 }
 
-# Allow time for the AI Platform service identity to propagate before
-# binding IAM roles to the Reasoning Engine service agent.
+# Allow time for the AI Platform and Service Extensions service identities (and
+# the auto-provisioned Reasoning Engine service agent and Agent Identity
+# workload identity pool) to propagate before downstream IAM bindings run.
+moved {
+  from = time_sleep.aiplatform_identity_propagation[0]
+  to   = time_sleep.aiplatform_identity_propagation
+}
+
 resource "time_sleep" "aiplatform_identity_propagation" {
-  count           = var.enable_psc_interface ? 1 : 0
-  depends_on      = [google_project_service_identity.aiplatform]
-  create_duration = "30s"
+  depends_on = [
+    google_project_service_identity.aiplatform,
+    google_project_service_identity.network_services,
+  ]
+  create_duration = "60s"
 }
 
 # The Reasoning Engine service agent (gcp-sa-aiplatform-re) also needs

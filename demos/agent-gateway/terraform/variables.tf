@@ -311,7 +311,7 @@ variable "model_armor_malicious_uri_enforcement" {
 variable "enable_model_armor_mcp_floor_setting" {
   description = "Enable Model Armor floor setting for MCP server protection (BigQuery MCP)"
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "enable_model_armor_vertex_ai" {

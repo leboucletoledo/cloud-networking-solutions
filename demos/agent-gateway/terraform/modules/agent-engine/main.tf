@@ -24,66 +24,83 @@ locals {
   agent_identity_principal = "principalSet://agents.global.org-${var.organization_id}.system.id.goog/attribute.platformContainer/aiplatform/projects/${var.project_number}"
 }
 
+# Allow additional time for the org-level Agent Identity workload identity pool
+# (agents.global.org-<ORG_ID>.system.id.goog) to finish propagating in IAM
+# after Vertex AI / Agent Platform APIs are enabled in module.foundation.
+resource "time_sleep" "agent_identity_pool_propagation" {
+  create_duration = "60s"
+}
+
 resource "google_project_iam_member" "agent_identity_service_usage" {
-  project = var.project_id
-  role    = "roles/serviceusage.serviceUsageConsumer"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/serviceusage.serviceUsageConsumer"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_browser" {
-  project = var.project_id
-  role    = "roles/browser"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/browser"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_express_user" {
-  project = var.project_id
-  role    = "roles/aiplatform.expressUser"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/aiplatform.expressUser"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_aiplatform_user" {
-  project = var.project_id
-  role    = "roles/aiplatform.user"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/aiplatform.user"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_api_registry_viewer" {
-  project = var.project_id
-  role    = "roles/cloudapiregistry.viewer"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/cloudapiregistry.viewer"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 # Required for the agent to call agentregistry.googleapis.com mcpServers.list
 # during startup discovery. Without this, list_mcp_servers() returns 403.
 resource "google_project_iam_member" "agent_identity_agent_registry_viewer" {
-  project = var.project_id
-  role    = "roles/agentregistry.viewer"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/agentregistry.viewer"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_log_writer" {
-  project = var.project_id
-  role    = "roles/logging.logWriter"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/logging.logWriter"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_metric_writer" {
-  project = var.project_id
-  role    = "roles/monitoring.metricWriter"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/monitoring.metricWriter"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_trace_agent" {
-  project = var.project_id
-  role    = "roles/cloudtrace.agent"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/cloudtrace.agent"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 resource "google_project_iam_member" "agent_identity_telemetry_writer" {
-  project = var.project_id
-  role    = "roles/telemetry.writer"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/telemetry.writer"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 # =============================================================================
@@ -114,9 +131,10 @@ resource "google_service_account" "agent_mcp_invoker" {
 # `google_service_account_iam_member` (requires `roles/iam.serviceAccountIamAdmin`
 # on the apply principal) or with an IAM condition on `resource.name`.
 resource "google_project_iam_member" "agent_identity_token_creator" {
-  project = var.project_id
-  role    = "roles/iam.serviceAccountTokenCreator"
-  member  = local.agent_identity_principal
+  project    = var.project_id
+  role       = "roles/iam.serviceAccountTokenCreator"
+  member     = local.agent_identity_principal
+  depends_on = [time_sleep.agent_identity_pool_propagation]
 }
 
 # =============================================================================
